@@ -47,6 +47,18 @@ interface Summary {
   skipped: number;
 }
 
+interface StoredRule {
+  width: number;
+  height: number;
+  format: Format;
+  suffix: string;
+}
+
+interface ConfigPayload {
+  dest: string;
+  rules: StoredRule[];
+}
+
 const IMAGE_FILTERS = [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg'] }];
 
 function basename(path: string): string {
@@ -74,6 +86,7 @@ function App() {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState<ProgressPayload | null>(null);
   const nextId = useRef(1);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const unlisten: Array<() => void> = [];
@@ -95,6 +108,40 @@ function App() {
     }).then((fn) => unlisten.push(fn));
     return () => unlisten.forEach((fn) => fn());
   }, []);
+
+  // Reload the last destination and rules on startup.
+  useEffect(() => {
+    invoke<ConfigPayload>('load_config')
+      .then((c) => {
+        setDest(c.dest);
+        setRules(
+          c.rules.map((r) => ({
+            id: nextId.current++,
+            width: String(r.width),
+            height: String(r.height),
+            format: r.format,
+            suffix: r.suffix,
+          })),
+        );
+      })
+      .finally(() => setLoaded(true));
+  }, []);
+
+  // Auto-save destination and rules whenever they change (after the initial load).
+  useEffect(() => {
+    if (!loaded) return;
+    void invoke('save_config', {
+      config: {
+        dest,
+        rules: rules.map((r) => ({
+          width: Number(r.width) || 0,
+          height: Number(r.height) || 0,
+          format: r.format,
+          suffix: r.suffix,
+        })),
+      },
+    });
+  }, [dest, rules, loaded]);
 
   const rulesValid =
     rules.length > 0 && rules.every((r) => Number(r.width) > 0 && Number(r.height) > 0);

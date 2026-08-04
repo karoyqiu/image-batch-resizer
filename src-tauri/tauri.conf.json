@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "image-batch-resizer",
+        "title": "Image Batch Resizer",
         "width": 1200,
         "height": 700
       }

@@ -5,7 +5,7 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
 
 use rayon::prelude::*;
-use tauri::{Emitter, State};
+use tauri::{Emitter, Manager, State};
 
 #[derive(Clone, serde::Serialize)]
 struct Progress {
@@ -114,12 +114,48 @@ fn stop_batch(state: State<'_, CancelFlag>) {
   state.0.store(true, Ordering::SeqCst);
 }
 
+/// Persisted between runs: the last destination directory and rule list.
+#[derive(serde::Deserialize, serde::Serialize, Default)]
+struct Config {
+  dest: String,
+  rules: Vec<resize::ResizeRule>,
+}
+
+fn config_path(app: &tauri::AppHandle) -> Option<PathBuf> {
+  let dir = app.path().app_config_dir().ok()?;
+  std::fs::create_dir_all(&dir).ok()?;
+  Some(dir.join("config.json"))
+}
+
+#[tauri::command]
+fn load_config(app: tauri::AppHandle) -> Config {
+  let Some(path) = config_path(&app) else {
+    return Config::default();
+  };
+  std::fs::read_to_string(&path)
+    .ok()
+    .and_then(|s| serde_json::from_str(&s).ok())
+    .unwrap_or_default()
+}
+
+#[tauri::command]
+fn save_config(app: tauri::AppHandle, config: Config) -> Result<(), String> {
+  let path = config_path(&app).ok_or_else(|| "no config directory".to_string())?;
+  let json = serde_json::to_string(&config).map_err(|e| e.to_string())?;
+  std::fs::write(&path, json).map_err(|e| e.to_string())
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
     .plugin(tauri_plugin_dialog::init())
     .manage(CancelFlag::default())
-    .invoke_handler(tauri::generate_handler![start_batch, stop_batch])
+    .invoke_handler(tauri::generate_handler![
+      start_batch,
+      stop_batch,
+      load_config,
+      save_config,
+    ])
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
