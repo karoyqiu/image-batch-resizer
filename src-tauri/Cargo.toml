@@ -1,6 +1,6 @@
 [package]
 name = "image-batch-resizer"
-version = "0.1.0"
+version = "1.0.0"
 description = "Resize multiple images into multiple sizes"
 authors = ["karoyqiu@gmail.com"]
 edition = "2024"

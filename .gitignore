@@ -31,3 +31,8 @@ dist-ssr
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# TypeScript incremental build artifacts (tsc -b / composite project emit)
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
