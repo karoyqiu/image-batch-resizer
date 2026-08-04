@@ -3,9 +3,9 @@
   "productName": "image-batch-resizer",
   "identifier": "com.gmail.karoyqiu.image-batch-resizer",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "nub run dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "nub run build",
     "frontendDist": "../dist",
     "removeUnusedCommands": true
   },
