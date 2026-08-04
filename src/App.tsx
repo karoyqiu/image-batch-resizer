@@ -87,6 +87,9 @@ function App() {
   const [progress, setProgress] = useState<ProgressPayload | null>(null);
   const nextId = useRef(1);
   const [loaded, setLoaded] = useState(false);
+  const [rulesCommit, setRulesCommit] = useState(0);
+  const rulesRef = useRef(rules);
+  rulesRef.current = rules;
 
   useEffect(() => {
     const unlisten: Array<() => void> = [];
@@ -127,13 +130,14 @@ function App() {
       .finally(() => setLoaded(true));
   }, []);
 
-  // Auto-save destination and rules whenever they change (after the initial load).
+  // Auto-save destination on change; save rules on field blur and discrete rule
+  // edits (format/add/remove), not on every keystroke in rule text fields.
   useEffect(() => {
     if (!loaded) return;
     void invoke('save_config', {
       config: {
         dest,
-        rules: rules.map((r) => ({
+        rules: rulesRef.current.map((r) => ({
           width: Number(r.width) || 0,
           height: Number(r.height) || 0,
           format: r.format,
@@ -141,7 +145,7 @@ function App() {
         })),
       },
     });
-  }, [dest, rules, loaded]);
+  }, [dest, rulesCommit, loaded]);
 
   const rulesValid =
     rules.length > 0 && rules.every((r) => Number(r.width) > 0 && Number(r.height) > 0);
@@ -157,11 +161,16 @@ function App() {
     if (selected) setDest(selected);
   }
 
+  function commitRules() {
+    setRulesCommit((n) => n + 1);
+  }
+
   function addRule() {
     setRules((prev) => [
       ...prev,
       { id: nextId.current++, width: '', height: '', format: 'png', suffix: '' },
     ]);
+    commitRules();
   }
 
   function updateRule(id: number, patch: Partial<Rule>) {
@@ -170,6 +179,7 @@ function App() {
 
   function removeRule(id: number) {
     setRules((prev) => prev.filter((r) => r.id !== id));
+    commitRules();
   }
 
   async function onSubmit() {
@@ -263,6 +273,7 @@ function App() {
                       className="w-24"
                       value={r.width}
                       onChange={(e) => updateRule(r.id, { width: e.target.value })}
+                      onBlur={commitRules}
                     />
                   </TableCell>
                   <TableCell>
@@ -272,12 +283,16 @@ function App() {
                       className="w-24"
                       value={r.height}
                       onChange={(e) => updateRule(r.id, { height: e.target.value })}
+                      onBlur={commitRules}
                     />
                   </TableCell>
                   <TableCell>
                     <Select
                       value={r.format}
-                      onValueChange={(v) => updateRule(r.id, { format: v as Format })}
+                      onValueChange={(v) => {
+                        updateRule(r.id, { format: v as Format });
+                        commitRules();
+                      }}
                     >
                       <SelectTrigger className="w-24">
                         <SelectValue />
@@ -293,6 +308,7 @@ function App() {
                       className="w-32"
                       value={r.suffix}
                       onChange={(e) => updateRule(r.id, { suffix: e.target.value })}
+                      onBlur={commitRules}
                     />
                   </TableCell>
                   <TableCell>
