@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-  tauri_shadcn_template_lib::run()
+  image_batch_resizer_lib::run()
 }

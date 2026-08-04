@@ -26,7 +26,7 @@ Vite dev server is fixed to port `1420` (required by `tauri.conf.json`'s `devUrl
 ## Architecture
 
 - **Frontend** (`src/`): standard Vite React app. Entry `src/main.tsx` → `src/App.tsx`. Path alias `@/*` maps to `src/*` (configured in both `tsconfig.json` and `vite.config.ts`).
-- **Backend** (`src-tauri/`): Rust crate `tauri_shadcn_template_lib` (note the `_lib` suffix, required so the lib and bin crate names don't collide on Windows). `src-tauri/src/main.rs` is the binary entry point that just calls `run()` from `lib.rs`, which is where Tauri commands/plugins get registered.
+- **Backend** (`src-tauri/`): Rust crate `image_batch_resizer_lib` (note the `_lib` suffix, required so the lib and bin crate names don't collide on Windows). `src-tauri/src/main.rs` is the binary entry point that just calls `run()` from `lib.rs`, which is where Tauri commands/plugins get registered.
 - Frontend and backend talk over Tauri's IPC; the CSP in `tauri.conf.json` (`app.security.csp`) explicitly allows `ipc:`/`ipc.localhost`. New Tauri commands need a matching permission added to `src-tauri/capabilities/default.json` (currently empty `permissions: []`).
 - Release builds are tuned for small binary size: `opt-level = "s"`, LTO, `panic = "abort"`, stripped symbols (`src-tauri/Cargo.toml [profile.release]`).
 

@@ -1,6 +1,6 @@
-# Tauri + React + Typescript + TailwindCSS + shadcn/ui
+# Image Batch Resizer
 
-This template should help get you started developing with Tauri, React, Typescript, TailwindCSS and shadcn/ui in Vite.
+Resize multiple images into multiple sizes.
 
 ## Recommended IDE Setup
 
